@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bible Reading Schedule</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5eed8;min-height:100vh;color:#2c1f0e}
+.screen{display:none;padding:1rem 0.75rem 3rem;max-width:700px;margin:0 auto}
+.screen.active{display:block}
+.hdr{padding:1.25rem;border:1px solid #c4a45a;border-radius:12px;background:#fdf8ed;margin-bottom:1rem;text-align:center}
+.stats{display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;padding-top:.75rem;border-top:1px solid #c4a45a;margin-top:.75rem}
+.sv{font-size:1.4rem;font-weight:600;color:#8b3a1a}
+.sl{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:#8b6914}
+.pw{background:rgba(196,164,90,0.25);height:5px;border-radius:3px;overflow:hidden;margin:.5rem 0 .2rem}
+.pf{height:100%;background:#8b3a1a;transition:width .3s;border-radius:3px}
+.pl{font-size:.7rem;color:#8b6914;text-align:right}
+.ban{border-left:4px solid #8b3a1a;background:#fff8e8;padding:.65rem .9rem;border-radius:0 8px 8px 0;margin-bottom:.75rem;display:none}
+.ban.show{display:block}
+.confirmbar{background:#fff3cd;border:1px solid #c9a84c;border-radius:8px;padding:.6rem .9rem;margin-bottom:.75rem;display:none;align-items:center;gap:.75rem;flex-wrap:wrap}
+.confirmbar.show{display:flex}
+.br{display:flex;gap:.5rem;margin-bottom:.75rem;flex-wrap:wrap}
+button{background:transparent;border:1px solid #c4a45a;border-radius:8px;padding:.45rem .9rem;font-size:.78rem;cursor:pointer;color:#2c1f0e;font-family:inherit;-webkit-tap-highlight-color:transparent}
+button:active{opacity:.7}
+button.pri{background:#8b3a1a;color:#fdf8ed;border-color:#8b3a1a}
+button.danger{background:#fff0f0;color:#c0392b;border-color:#e57373}
+.wh{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:#8b6914;padding:.25rem .6rem;background:#f0e8d0;border-radius:8px 8px 0 0;border:1px solid #c4a45a;border-bottom:none;display:inline-block}
+.wb{border:1px solid #c4a45a;border-radius:0 8px 8px 8px;background:#fdf8ed;margin-bottom:1rem;overflow:hidden}
+.dr{display:flex;align-items:center;gap:.5rem;padding:.6rem .65rem;border-bottom:1px solid rgba(196,164,90,0.3);cursor:pointer;min-height:48px;-webkit-tap-highlight-color:transparent}
+.dr:active{background:rgba(196,164,90,0.15)}
+.dr.today{background:rgba(139,58,26,0.07);border-left:3px solid #8b3a1a}
+.dr.done .rd{text-decoration:line-through;opacity:.5}
+.dr.recalc{border-left:3px solid #3a6b2a}
+.ck{width:20px;height:20px;border:1.5px solid #c4a45a;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;background:white;color:#2c1f0e}
+.ck.done{background:#8b3a1a;border-color:#8b3a1a;color:white}
+.ck.part{background:#fff3cd;border-color:#c9a84c;color:#8b6914}
+.dw{width:28px;font-size:.65rem;color:#a07840;text-transform:uppercase;flex-shrink:0}
+.dt{width:54px;font-size:.72rem;color:#8b6914;flex-shrink:0}
+.rd{flex:1;font-size:.88rem;line-height:1.35}
+.nt{display:block;font-size:.7rem;color:#3a6b2a;margin-top:2px}
+.lb{font-size:.65rem;padding:.2rem .5rem;flex-shrink:0}
+.lp{display:none;align-items:center;gap:.5rem;padding:.5rem .65rem;background:#f5eed8;border-bottom:1px solid rgba(196,164,90,0.3);flex-wrap:wrap}
+.lp.open{display:flex}
+.lp label{font-size:.82rem;color:#8b6914}
+.lp input{width:65px;padding:.3rem .4rem;border:1px solid #c4a45a;border-radius:6px;background:#fdf8ed;color:#2c1f0e;font-size:.9rem;font-family:inherit}
+/* Settings */
+.scard{background:#fdf8ed;border:1px solid #c4a45a;border-radius:12px;padding:1rem;margin-bottom:1rem}
+.scard h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:#8b6914;margin-bottom:.75rem}
+.srow{display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem;flex-wrap:wrap}
+.srow label{font-size:.85rem;color:#2c1f0e;min-width:110px}
+.srow input[type=date],.srow input[type=number]{padding:.35rem .5rem;border:1px solid #c4a45a;border-radius:6px;background:white;color:#2c1f0e;font-size:.85rem;font-family:inherit}
+.books-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.4rem}
+.book-btn{padding:.35rem .5rem;font-size:.75rem;border-radius:6px;cursor:pointer;border:1px solid #c4a45a;background:white;color:#2c1f0e;text-align:left;-webkit-tap-highlight-color:transparent}
+.book-btn.skipped{background:#f0e8d0;color:#a07840;text-decoration:line-through}
+.book-btn:active{opacity:.7}
+.section-btn{font-size:.72rem;padding:.3rem .6rem;margin-right:.4rem;margin-bottom:.4rem}
+.nav{display:flex;gap:.5rem;margin-bottom:1rem}
+</style>
+</head>
+<body>
+
+<!-- SCHEDULE SCREEN -->
+<div class="screen active" id="screenSchedule">
+  <div style="max-width:700px;margin:0 auto">
+    <div class="hdr">
+      <div style="font-size:.75rem;letter-spacing:.3em;color:#8b6914;margin-bottom:.25rem">— ✦ —</div>
+      <div style="font-size:1.3rem;font-weight:600;margin-bottom:.15rem">Bible Reading Schedule</div>
+      <div style="font-size:.85rem;color:#8b6914;font-style:italic" id="sub">Loading…</div>
+      <div class="pw"><div class="pf" id="pf" style="width:0%"></div></div>
+      <div class="pl" id="pl"></div>
+      <div class="stats">
+        <div><div class="sv" id="sc">—</div><div class="sl">Chapters left</div></div>
+        <div><div class="sv" id="sd">—</div><div class="sl">Days left</div></div>
+        <div><div class="sv" id="sp">—</div><div class="sl">Per day</div></div>
+        <div><div class="sv" id="sf">—</div><div class="sl">Finish</div></div>
+      </div>
+    </div>
+    <div class="ban" id="ban">
+      <div style="font-size:.8rem;font-weight:600;color:#8b3a1a;margin-bottom:.2rem">You're behind</div>
+      <div style="font-size:.82rem;color:#555;margin-bottom:.5rem" id="banTxt"></div>
+      <div style="display:flex;gap:.4rem">
+        <button class="pri" onclick="doRecalc()">Recalculate</button>
+        <button onclick="doDismiss()">Dismiss</button>
+      </div>
+    </div>
+    <div class="confirmbar" id="confirmbar">
+      <span style="font-size:.85rem;font-weight:600;color:#8b6914">Reset all progress?</span>
+      <button class="danger" onclick="doResetConfirmed()">Yes, reset</button>
+      <button onclick="doCancelReset()">Cancel</button>
+    </div>
+    <div class="br">
+      <button class="pri" onclick="showScreen('screenSettings')">⚙ Settings</button>
+      <button onclick="doRecalc()">Recalculate plan</button>
+      <button onclick="doResetAsk()">Reset progress</button>
+    </div>
+    <div id="sched"></div>
+  </div>
+</div>
+
+<!-- SETTINGS SCREEN -->
+<div class="screen" id="screenSettings">
+  <div style="max-width:700px;margin:0 auto">
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem">
+      <button onclick="saveSettings()" class="pri">← Save &amp; Back</button>
+      <div style="font-size:1.1rem;font-weight:600">Settings</div>
+    </div>
+
+    <div class="scard">
+      <h3>Dates &amp; Pace</h3>
+      <div class="srow">
+        <label>Start date</label>
+        <input type="date" id="cfgStart">
+      </div>
+      <div class="srow">
+        <label>End date</label>
+        <input type="date" id="cfgEnd">
+      </div>
+      <div class="srow">
+        <label>Chapters/day</label>
+        <input type="number" id="cfgCpd" min="1" max="50" placeholder="Auto" style="width:80px">
+        <span style="font-size:.78rem;color:#8b6914">Leave blank to calculate automatically</span>
+      </div>
+    </div>
+
+    <div class="scard">
+      <h3>Books to Include</h3>
+      <div style="margin-bottom:.6rem">
+        <button class="section-btn" onclick="toggleSection('ot',true)">Include all OT</button>
+        <button class="section-btn" onclick="toggleSection('ot',false)">Skip all OT</button>
+        <button class="section-btn" onclick="toggleSection('nt',true)">Include all NT</button>
+        <button class="section-btn" onclick="toggleSection('nt',false)">Skip all NT</button>
+        <button class="section-btn" onclick="toggleSection('all',true)">Include all</button>
+      </div>
+      <div class="books-grid" id="booksGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var BIBLE=[["Genesis",50,"ot"],["Exodus",40,"ot"],["Leviticus",27,"ot"],["Numbers",36,"ot"],["Deuteronomy",34,"ot"],["Joshua",24,"ot"],["Judges",21,"ot"],["Ruth",4,"ot"],["1 Samuel",31,"ot"],["2 Samuel",24,"ot"],["1 Kings",22,"ot"],["2 Kings",25,"ot"],["1 Chronicles",29,"ot"],["2 Chronicles",36,"ot"],["Ezra",10,"ot"],["Nehemiah",13,"ot"],["Esther",10,"ot"],["Job",42,"ot"],["Psalms",150,"ot"],["Proverbs",31,"ot"],["Ecclesiastes",12,"ot"],["Song of Solomon",8,"ot"],["Isaiah",66,"ot"],["Jeremiah",52,"ot"],["Lamentations",5,"ot"],["Ezekiel",48,"ot"],["Daniel",12,"ot"],["Hosea",14,"ot"],["Joel",3,"ot"],["Amos",9,"ot"],["Obadiah",1,"ot"],["Jonah",4,"ot"],["Micah",7,"ot"],["Nahum",3,"ot"],["Habakkuk",3,"ot"],["Zephaniah",3,"ot"],["Haggai",2,"ot"],["Zechariah",14,"ot"],["Malachi",4,"ot"],["Matthew",28,"nt"],["Mark",16,"nt"],["Luke",24,"nt"],["John",21,"nt"],["Acts",28,"nt"],["Romans",16,"nt"],["1 Corinthians",16,"nt"],["2 Corinthians",13,"nt"],["Galatians",6,"nt"],["Ephesians",6,"nt"],["Philippians",4,"nt"],["Colossians",4,"nt"],["1 Thessalonians",5,"nt"],["2 Thessalonians",3,"nt"],["1 Timothy",6,"nt"],["2 Timothy",4,"nt"],["Titus",3,"nt"],["Philemon",1,"nt"],["Hebrews",13,"nt"],["James",5,"nt"],["1 Peter",5,"nt"],["2 Peter",3,"nt"],["1 John",5,"nt"],["2 John",1,"nt"],["3 John",1,"nt"],["Jude",1,"nt"],["Revelation",22,"nt"]];
+
+var MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var DW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function lsGet(k,def){try{var v=localStorage.getItem(k);return v!=null?JSON.parse(v):def;}catch(e){return def;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
+
+// State
+var log=lsGet('bib_log',{});
+var customPlan=lsGet('bib_cp',null);
+var dim=lsGet('bib_dim',false);
+var cfg=lsGet('bib_cfg',{
+  start:'2026-06-08',
+  end:'2026-08-31',
+  cpd:0,
+  skipped:{'Genesis':true,'Exodus':true,'Leviticus':true,'Numbers':true,'Deuteronomy':true,'Joshua':true,'Judges':true,'Ruth':true,'1 Samuel':true,'2 Samuel':true,'1 Kings':true,'2 Kings':true,'1 Chronicles':true,'2 Chronicles':true,'Ezra':true,'Nehemiah':true,'Esther':true,'Job':true,'Psalms':true}
+});
+
+function persist(){lsSet('bib_log',log);lsSet('bib_cp',customPlan);lsSet('bib_dim',dim);lsSet('bib_cfg',cfg);}
+
+function parseDate(s){var p=s.split('-');return new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));}
+function fmtDate(d){return MO[d.getMonth()]+' '+d.getDate();}
+function fmtDateFull(d){return MO[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();}
+function isoDate(d){return d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1)+'-'+(d.getDate()<10?'0':'')+d.getDate();}
+function dayCount(s,e){var d=new Date(s.getTime()),n=0;while(d<=e){n++;d.setDate(d.getDate()+1);}return n;}
+
+function buildChapters(){
+  var all=[];
+  for(var i=0;i<BIBLE.length;i++){
+    if(cfg.skipped&&cfg.skipped[BIBLE[i][0]])continue;
+    for(var c=1;c<=BIBLE[i][1];c++)all.push({b:BIBLE[i][0],c:c});
+  }
+  return all;
+}
+
+function buildPlan(chapters){
+  var start=parseDate(cfg.start),end=parseDate(cfg.end);
+  var totalDays=dayCount(start,end);
+  var perDay=cfg.cpd>0?cfg.cpd:Math.ceil(chapters.length/totalDays);
+  var plan=[],idx=0;
+  for(var d=0;d<totalDays;d++){
+    var date=new Date(start.getTime());
+    date.setDate(start.getDate()+d);
+    // Use custom plan targets if available
+    var t=(customPlan&&customPlan[d]!=null)?customPlan[d]:perDay;
+    var s=idx,e=Math.min(idx+t,chapters.length);
+    plan.push({d:d,date:date,s:s,e:e,t:t,perDay:perDay});
+    idx=e;
+    if(idx>=chapters.length){
+      for(var r=d+1;r<totalDays;r++){
+        var rd=new Date(start.getTime());rd.setDate(start.getDate()+r);
+        plan.push({d:r,date:rd,s:chapters.length,e:chapters.length,t:0,perDay:perDay});
+      }
+      break;
+    }
+  }
+  return {plan:plan,totalDays:totalDays,perDay:perDay,start:start,end:end};
+}
+
+function grp(ch){var o=[],i=0;while(i<ch.length){var b=ch[i].b,s=ch[i].c,e=s;while(i+1<ch.length&&ch[i+1].b===b){i++;e=ch[i].c;}o.push({b:b,s:s,e:e});i++;}return o;}
+
+function totRead(plan,chapters){
+  var total=0;
+  for(var i=0;i<plan.length;i++){var p=plan[i],av=p.e-p.s,r=log[p.d]!=null?Math.min(log[p.d],av):0;total+=r;}
+  return total;
+}
+
+function todayIdx(planObj){
+  var now=new Date();
+  var diff=Math.floor((now-planObj.start)/86400000);
+  return Math.max(0,Math.min(diff,planObj.totalDays-1));
+}
+
+function daysLeft(planObj){
+  var now=new Date();
+  var d=new Date(planObj.end.getTime()),count=0;
+  var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  while(d>=today){count++;d.setDate(d.getDate()-1);}
+  return Math.max(0,count);
+}
+
+function beh(plan,ti){
+  var total=0;
+  for(var i=0;i<=ti&&i<plan.length;i++){
+    var p=plan[i],av=p.e-p.s,r=log[p.d]!=null?Math.min(log[p.d],av):0;
+    if(p.d<ti)total+=(av-r);
+    else if(p.d===ti&&r>0&&r<av)total+=(av-r);
+  }
+  return total;
+}
+
+function showScreen(id){
+  var screens=document.querySelectorAll('.screen');
+  for(var i=0;i<screens.length;i++)screens[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  if(id==='screenSettings')renderSettings();
+  if(id==='screenSchedule')render();
+}
+
+function doResetAsk(){document.getElementById('confirmbar').classList.add('show');}
+function doCancelReset(){document.getElementById('confirmbar').classList.remove('show');}
+function doResetConfirmed(){
+  log={};customPlan=null;dim=false;
+  lsDel('bib_log');lsDel('bib_cp');lsDel('bib_dim');
+  document.getElementById('confirmbar').classList.remove('show');
+  render();
+}
+function doDismiss(){dim=true;persist();render();}
+
+function doRecalc(){
+  var chapters=buildChapters();
+  var planObj=buildPlan(chapters);
+  var plan=planObj.plan;
+  var ti=todayIdx(planObj);
+  var read=totRead(plan,chapters);
+  var rem=chapters.length-read;
+  var dL=planObj.totalDays-ti;
+  if(!dL||!rem)return;
+  var base=Math.floor(rem/dL),ex=rem%dL;
+  var np={};
+  if(customPlan){for(var k in customPlan)np[k]=customPlan[k];}
+  for(var d=0;d<ti;d++)np[d]=plan[d]?plan[d].t:planObj.perDay;
+  for(var d=ti;d<planObj.totalDays;d++)np[d]=base+((d-ti)<ex?1:0);
+  customPlan=np;dim=false;persist();render();
+}
+
+function doRowClick(d,av){
+  if(!av)return;
+  var r=log[d]!=null?log[d]:0;
+  if(r>=av)delete log[d];else log[d]=av;
+  dim=false;persist();render();
+}
+function doOpenLog(d,av,cur){
+  var els=document.querySelectorAll('.lp.open');
+  for(var i=0;i<els.length;i++)els[i].classList.remove('open');
+  var lp=document.getElementById('lp'+d);
+  if(lp){lp.classList.add('open');var inp=document.getElementById('li'+d);if(inp)inp.value=cur;}
+}
+function doSaveLog(d,av){
+  var inp=document.getElementById('li'+d);if(!inp)return;
+  var v=parseInt(inp.value);if(isNaN(v)||v<0)return;
+  if(v===0)delete log[d];else log[d]=Math.min(v,av);
+  dim=false;var lp=document.getElementById('lp'+d);if(lp)lp.classList.remove('open');
+  persist();render();
+}
+function doCancelLog(d){var lp=document.getElementById('lp'+d);if(lp)lp.classList.remove('open');}
+
+function render(){
+  var chapters=buildChapters();
+  var planObj=buildPlan(chapters);
+  var plan=planObj.plan;
+  var ti=todayIdx(planObj);
+  var read=totRead(plan,chapters);
+  var rem=chapters.length-read;
+  var dl=daysLeft(planObj);
+  var ppd=dl>0?Math.ceil(rem/dl):0;
+  var pct=chapters.length>0?Math.round(read/chapters.length*100):0;
+  var tds=new Date(planObj.start.getTime());tds.setDate(planObj.start.getDate()+ti);var tdStr=tds.toDateString();
+  var behind=beh(plan,ti);
+
+  document.getElementById('sc').textContent=rem;
+  document.getElementById('sd').textContent=dl;
+  document.getElementById('sp').textContent=ppd;
+  document.getElementById('sf').textContent=fmtDate(planObj.end);
+  document.getElementById('sub').textContent=fmtDateFull(planObj.start)+' – '+fmtDateFull(planObj.end)+' · '+planObj.perDay+' chapters/day';
+  document.getElementById('pf').style.width=pct+'%';
+  document.getElementById('pl').textContent=read+' / '+chapters.length+' · '+pct+'%';
+
+  var ban=document.getElementById('ban');
+  if(behind>0&&!dim){
+    ban.classList.add('show');
+    document.getElementById('banTxt').textContent=behind+' chapter'+(behind>1?'s':'')+' behind — recalculate to spread '+rem+' chapters over '+dl+' days ('+(dl>0?Math.ceil(rem/dl):0)+'/day).';
+  }else{ban.classList.remove('show');}
+
+  var weeks=[];for(var i=0;i<plan.length;i+=7)weeks.push(plan.slice(i,i+7));
+  var html='';
+  for(var w=0;w<weeks.length;w++){
+    var wk=[];for(var x=0;x<weeks[w].length;x++){if(weeks[w][x])wk.push(weeks[w][x]);}
+    if(!wk.length)continue;
+    html+='<div class="wh">Week '+(w+1)+' · '+fmtDate(wk[0].date)+' – '+fmtDate(wk[wk.length-1].date)+'</div><div class="wb">';
+    for(var j=0;j<wk.length;j++){
+      var p=wk[j],ch=chapters.slice(p.s,p.e),av=ch.length;
+      var r=log[p.d]!=null?Math.min(log[p.d],av):0;
+      var done=(r>=av&&av>0),part=(r>0&&!done);
+      var isT=p.date.toDateString()===tdStr;
+      var isR=customPlan&&customPlan[p.d]!=null&&customPlan[p.d]!==planObj.perDay;
+      var rc='dr';if(done)rc+=' done';if(part)rc+=' part';if(isT)rc+=' today';if(isR&&!done&&!part)rc+=' recalc';
+      var gs=grp(ch),rdg='';
+      if(av>0){for(var k=0;k<gs.length;k++){if(k>0)rdg+=' · ';rdg+=gs[k].b+' <span style="color:#8b3a1a;font-style:italic">'+(gs[k].s===gs[k].e?gs[k].s:gs[k].s+'–'+gs[k].e)+'</span>';}}
+      else rdg='<em style="color:#aaa">—</em>';
+      var note=part?'<span class="nt">Read '+r+' of '+av+'</span>':(isR&&!done?'<span class="nt">↺ recalculated: '+av+' chapters</span>':'');
+      var ckc=done?'ck done':part?'ck part':'ck',ckl=done?'✓':part?'½':'';
+      html+='<div class="'+rc+'" onclick="doRowClick('+p.d+','+av+')">';
+      html+='<div class="'+ckc+'">'+ckl+'</div>';
+      html+='<div class="dw">'+DW[p.date.getDay()]+'</div>';
+      html+='<div class="dt">'+fmtDate(p.date)+'</div>';
+      html+='<div class="rd">'+rdg+note+'</div>';
+      if(!done&&av>0)html+='<button class="lb" onclick="event.stopPropagation();doOpenLog('+p.d+','+av+','+r+')">Log</button>';
+      html+='</div>';
+      html+='<div class="lp" id="lp'+p.d+'"><label>Chapters read:</label><input type="number" min="0" max="'+av+'" id="li'+p.d+'" value="'+r+'" onclick="event.stopPropagation()"><button onclick="event.stopPropagation();doSaveLog('+p.d+','+av+')">Save</button><button onclick="event.stopPropagation();doCancelLog('+p.d+')">Cancel</button></div>';
+    }
+    html+='</div>';
+  }
+  document.getElementById('sched').innerHTML=html;
+}
+
+// ---- SETTINGS ----
+function renderSettings(){
+  document.getElementById('cfgStart').value=cfg.start;
+  document.getElementById('cfgEnd').value=cfg.end;
+  document.getElementById('cfgCpd').value=cfg.cpd>0?cfg.cpd:'';
+  var grid=document.getElementById('booksGrid');
+  var html='';
+  for(var i=0;i<BIBLE.length;i++){
+    var bk=BIBLE[i][0],skipped=cfg.skipped&&cfg.skipped[bk];
+    html+='<button class="book-btn'+(skipped?' skipped':'')+'" onclick="toggleBook(\''+bk.replace(/'/g,"\\'")+'\')" id="bb-'+i+'">'+(skipped?'✗ ':'')+bk+' ('+BIBLE[i][1]+')</button>';
+  }
+  grid.innerHTML=html;
+}
+
+function toggleBook(bk){
+  if(!cfg.skipped)cfg.skipped={};
+  if(cfg.skipped[bk])delete cfg.skipped[bk];
+  else cfg.skipped[bk]=true;
+  renderSettings();
+}
+
+function toggleSection(section,include){
+  if(!cfg.skipped)cfg.skipped={};
+  for(var i=0;i<BIBLE.length;i++){
+    if(section==='all'||BIBLE[i][2]===section){
+      if(include)delete cfg.skipped[BIBLE[i][0]];
+      else cfg.skipped[BIBLE[i][0]]=true;
+    }
+  }
+  renderSettings();
+}
+
+function saveSettings(){
+  var s=document.getElementById('cfgStart').value;
+  var e=document.getElementById('cfgEnd').value;
+  var c=parseInt(document.getElementById('cfgCpd').value);
+  if(s)cfg.start=s;
+  if(e)cfg.end=e;
+  cfg.cpd=isNaN(c)||c<1?0:c;
+  // Reset custom plan when settings change
+  customPlan=null;lsDel('bib_cp');
+  persist();
+  showScreen('screenSchedule');
+}
+
+render();
+</script>
+</body>
+</html>
